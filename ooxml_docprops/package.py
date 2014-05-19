@@ -1,4 +1,8 @@
 """Representation of an OOXML based Package.
+
+Relevant parts of standards:
+- ECMA-376 4th edition Part 2
+  http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
 from os.path import abspath

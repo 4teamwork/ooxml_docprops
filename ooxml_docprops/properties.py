@@ -1,4 +1,11 @@
 """Representation of the Custom DocProperties Part of an OOXML Document.
+
+Relevant parts of standards:
+- ECMA-376 4th edition Part 1: Section 13.2 (Package Structure)
+- ECMA-376 4th edition Part 1: Section 15.2.12.2 (Custom File Properties Part)
+- ECMA-376 4th edition Part 1: Section 22.3 (Custom Properties)
+
+http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
 from config import CUSTOM_PROPERTY_FMTID
@@ -9,7 +16,6 @@ from datatypes import DataTypeValidator
 from lxml import etree
 from package import OOXMLPackage
 import config
-import datetime
 import os
 
 
@@ -30,16 +36,13 @@ class CustomPropertiesPart(object):
         property_node = self.get_property_node(name)
         value_type_node = property_node.getchildren()[0]
         self.validator.validate(value_type_node, value)
-        # TODO: Type validation
         value = self.converter.convert_value(value)
-        value_type_node.text = str(value)
+        value_type_node.text = value
         self.write_back()
 
     def get_property_value(self, name):
         property_node = self.get_property_node(name)
         value_type_node = property_node.getchildren()[0]
-        # TODO: Type validation
-        # TODO: Type conversion
         value = self.converter.convert_node(value_type_node)
         return value
 
@@ -141,33 +144,17 @@ class OOXMLDocument(OOXMLPackage):
 
 
 def update_properties(document, metadata):
+    """Update custom doc properties in the document specified by path
+    `document` with properties from `metadata`. Modifies the document in place!
+    """
     with OOXMLDocument(document) as doc:
         doc.update_properties(metadata)
 
 
 def read_properties(document):
+    """Read custom doc properties from the file `document`.
+    """
     with OOXMLDocument(document, read_only=True) as doc:
         for name in doc.properties.get_property_names():
             value = doc.properties.get_property_value(name)
             yield (name, value)
-
-
-def cast_property_value(self, value_type_node):
-    vt_node = value_type_node
-    tag = vt_node.tag
-    ns = vt_node.nsmap.get(vt_node.prefix)
-    if ns is not None:
-        tag = tag.replace('{%s}' % ns, '')
-
-    if tag == 'lpwstr':
-        # String
-        value = str(vt_node.text)
-    elif tag == 'i4':
-        # Integer
-        value = int(vt_node.text)
-    elif tag == 'date':
-        # Date
-        value = datetime.strptime(vt_node.text)
-    else:
-        raise Exception("Unsupported value type")
-    return value

@@ -1,5 +1,9 @@
 """Definitions of ValueTypes used in OOXML and corresponding converters
 and validators.
+
+Relevant parts of standards:
+- ECMA-376 4th edition Part 1: Section 22.4 (Variant Types)
+  http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
 from lxml.etree import QName
@@ -17,17 +21,24 @@ class ValidationError(Exception):
 class DataTypeConverter(object):
 
     def convert_value(self, value):
+        """Convert Python data types to the corresponding unicode
+        representation to be set as the text of the value type node.
+        """
         if isinstance(value, basestring):
-            # TODO: Deal with non-ASCII characters / unicode
+            # Always pass unicode to lxml API
+            if isinstance(value, str):
+                value = value.decode('utf-8')
             return value
         elif isinstance(value, int):
-            return str(value)
+            return str(value).encode('utf-8')
         elif isinstance(value, bool):
-            return value and 'true' or 'false'
+            return value and u'true' or u'false'
         else:
             raise Exception("Unsupported value type")
 
     def convert_node(self, vt_node):
+        """Convert a value type node to a native Python data type.
+        """
         tag = QName(vt_node).localname
         value = vt_node.text
         if tag in STR_VTYPES:
@@ -40,6 +51,9 @@ class DataTypeConverter(object):
             raise Exception("Unsupported value type: %s" % tag)
 
     def determine_value_type(self, value):
+        """Given a Python data type, determine the correct value type node
+        type.
+        """
         if isinstance(value, int):
             return 'i4'
         elif isinstance(value, basestring):
@@ -53,6 +67,9 @@ class DataTypeConverter(object):
 class DataTypeValidator(object):
 
     def validate(self, vt_node, value):
+        """Given a value type node and a native Python data type, check if
+        the two types are compatible.
+        """
         tag = QName(vt_node).localname
         if tag in INT_VTYPES:
             required_type = int
