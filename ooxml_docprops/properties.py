@@ -107,8 +107,6 @@ class CustomPropertiesPart(object):
 
 
 class OOXMLDocument(OOXMLPackage):
-    def __init__(self, *args, **kwargs):
-        OOXMLPackage.__init__(self, *args, **kwargs)
 
     def __enter__(self):
         OOXMLPackage.__enter__(self)
