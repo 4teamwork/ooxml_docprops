@@ -1,5 +1,5 @@
-SUPPORTED_MIME_TYPES = set(
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+SUPPORTED_MIME_TYPES = (
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 )
 
 
