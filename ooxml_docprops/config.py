@@ -27,3 +27,7 @@ NSMAP_CUSTOM_PROPERTIES = {
     None: NAMESPACES['CUSTOM_PROPS'],  # None means default namespace
     'vt': NAMESPACES['VTYPES'],
 }
+
+SUPPORTED_MIME_TYPES = (
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+)
