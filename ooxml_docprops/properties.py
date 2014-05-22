@@ -8,15 +8,18 @@ Relevant parts of standards:
 http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
+from config import CUSTOM_PROPERTY_DEFAULT_PATH
 from config import CUSTOM_PROPERTY_FMTID
 from config import NAMESPACES
 from config import NSMAP
+from config import NSMAP_CUSTOM_PROPERTIES
 from datatypes import DataTypeConverter
 from datatypes import DataTypeValidator
 from lxml import etree
 from package import OOXMLPackage
 import config
 import os
+import re
 
 
 class CustomPropertiesPart(object):
@@ -72,7 +75,7 @@ class CustomPropertiesPart(object):
         root = self._properties_tree.getroot()
 
         new_property = etree.SubElement(root, '{%s}property' %
-            NAMESPACES['CUSTOM_PROPS'])
+                                        NAMESPACES['CUSTOM_PROPS'])
         new_property.attrib['fmtid'] = CUSTOM_PROPERTY_FMTID
         new_property.attrib['pid'] = new_pid
         new_property.attrib['name'] = name
@@ -84,6 +87,11 @@ class CustomPropertiesPart(object):
         value = self.converter.convert_value(value)
         vt.text = value
         self.write_back()
+
+    def update(self, metadata):
+        for (key, value) in metadata.items():
+            self.update_property(key, value)
+        return self
 
     def update_property(self, name, value):
         if self.has_property(name):
@@ -106,39 +114,111 @@ class CustomPropertiesPart(object):
         return prop
 
 
+class EmptyPropertiesPart(object):
+
+    def __init__(self, workdir):
+        self.workdir = workdir
+
+    def update(self, metadata):
+        if not metadata:
+            return
+        properties_path = self.init_property_files()
+        return CustomPropertiesPart(properties_path).update(metadata)
+
+    def init_property_files(self):
+        relationships = OOXMLRelationships(self.workdir)
+        return relationships.create_custom_props_relationship()
+
+    def get_property_names(self):
+        return []
+
+
+class OOXMLRelationships(object):
+
+    def __init__(self, workdir):
+        self.workdir = workdir
+        self.rels_path = os.path.join(self.workdir, '_rels', '.rels')
+        self._relationships_tree = etree.parse(open(self.rels_path))
+
+    @property
+    def relationships(self):
+        return self._relationships_tree.xpath(
+            '/r:Relationships/r:Relationship',
+            namespaces=NSMAP
+        )
+
+    def get_by_type(self, type):
+        for rel in self.relationships:
+            if rel.attrib['Type'] == type:
+                return rel
+        return None
+
+    def get_custom_props_path(self):
+        custom_props_rel = self.get_by_type(NAMESPACES['CUSTOM_PROPS_REL'])
+        if custom_props_rel is None:
+            return None
+        target = custom_props_rel.attrib['Target']
+        return os.path.join(self.workdir, target)
+
+    def create_custom_props_relationship(self):
+        self._update_relationships()
+        return self._create_custom_props_file()
+
+    def _create_custom_props_file(self):
+        custom_props_path = os.path.join(self.workdir,
+                                         CUSTOM_PROPERTY_DEFAULT_PATH)
+        assert not os.path.exists(custom_props_path)
+
+        with open(custom_props_path, 'w') as f:
+            root = etree.Element('Properties', nsmap=NSMAP_CUSTOM_PROPERTIES)
+            xml = etree.tostring(etree.ElementTree(root), pretty_print=True,
+                                 xml_declaration=True, encoding='utf-8')
+            f.write(xml)
+
+        return custom_props_path
+
+    def _update_relationships(self):
+        assert self.get_by_type(NAMESPACES['CUSTOM_PROPS_REL']) is None
+
+        max_rid = self.get_max_rid()
+        new_rid = "rId{}".format(max_rid + 1)
+        root = self._relationships_tree.getroot()
+
+        new_relationship = etree.SubElement(root, '{%s}Relationship' %
+                                            NAMESPACES['RELATIONSHIPS'])
+        new_relationship.attrib['Type'] = NAMESPACES['CUSTOM_PROPS_REL']
+        new_relationship.attrib['Id'] = new_rid
+        new_relationship.attrib['Target'] = CUSTOM_PROPERTY_DEFAULT_PATH
+
+        self._write_relationships_file()
+
+    def _write_relationships_file(self):
+        xml = etree.tostring(self._relationships_tree, pretty_print=True,
+                             xml_declaration=True, encoding='utf-8')
+        with open(self.rels_path, 'w') as f:
+            f.write(xml)
+
+    def get_max_rid(self):
+        return max(int(re.match('rId(\d+)', n.attrib['Id']).group(1))
+                   for n in self.relationships)
+
+
 class OOXMLDocument(OOXMLPackage):
 
     def __enter__(self):
-        OOXMLPackage.__enter__(self)
-        self.properties = CustomPropertiesPart(self.get_docprops_path())
+        super(OOXMLDocument, self).__enter__()
+
+        self.relationships = OOXMLRelationships(self.workdir)
+        docprops_path = self.relationships.get_custom_props_path()
+        if docprops_path is None:
+            self.properties = EmptyPropertiesPart(self.workdir)
+        else:
+            self.properties = CustomPropertiesPart(docprops_path)
         return self
 
-    def get_relationships(self):
-        rels_path = os.path.join(self.workdir, '_rels', '.rels')
-        with open(rels_path) as rels_xml_file:
-            rels_xml = etree.parse(rels_xml_file)
-        relationships = rels_xml.xpath('/r:Relationships/r:Relationship',
-                                       namespaces=NSMAP)
-        return relationships
-
-    def get_docprops_path(self):
-        relationships = self.get_relationships()
-
-        custom_props_rel = None
-        for rel in relationships:
-            if rel.attrib['Type'] == NAMESPACES['CUSTOM_PROPS_REL']:
-                custom_props_rel = rel
-
-        if custom_props_rel is None:
-            raise Exception("No rel for custom props found")
-
-        target = custom_props_rel.attrib['Target']
-        docprops_path = os.path.join(self.workdir, target)
-        return docprops_path
-
     def update_properties(self, metadata):
-        for (key, value) in metadata.items():
-            self.properties.update_property(key, value)
+        assert not self._read_only, 'you may not update readonly documents!'
+        self.properties = self.properties.update(metadata)
 
 
 def update_properties(document, metadata):

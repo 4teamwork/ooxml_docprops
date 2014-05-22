@@ -10,6 +10,16 @@ class TestDocProperties(TestCase):
             with OOXMLDocument(asset.path) as doc:
                 self.assertItemsEqual([], doc.properties.get_property_names())
 
+    def test_properties_can_be_added_to_documents_without_properties(self):
+        with TestAsset('without_custom_properties.docx') as asset:
+            with OOXMLDocument(asset.path) as doc:
+                self.assertListEqual([], doc.properties.get_property_names())
+
+                doc.update_properties({'Hans': 'Peter'})
+
+                self.assertItemsEqual(['Hans'],
+                                      doc.properties.get_property_names())
+
     def test_properties_can_be_added_to_documents_with_properties(self):
         with TestAsset('with_custom_properties.docx') as asset:
             with OOXMLDocument(asset.path) as doc:
