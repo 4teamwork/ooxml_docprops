@@ -1,8 +1,8 @@
 """Simple command-line interface for easy testing.
 """
 
-from properties import update_properties
-from properties import read_properties
+from ooxml_docprops import read_properties
+from ooxml_docprops import update_properties
 import argparse
 import config
 import json
