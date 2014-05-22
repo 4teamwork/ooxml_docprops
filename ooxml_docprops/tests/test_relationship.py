@@ -31,8 +31,6 @@ class TestRelationships(TestCase):
                     doc.workdir, config.CUSTOM_PROPERTY_DEFAULT_PATH
                 )
                 self.assertFalse(exists(custom_props_path))
-
-                relationships = doc.relationships
-                relationships.create_custom_props_relationship()
+                doc.update_properties({'Foo': 'Bar'})
 
                 self.assertTrue(exists(custom_props_path))
