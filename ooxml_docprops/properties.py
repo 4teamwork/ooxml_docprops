@@ -256,3 +256,7 @@ class OOXMLDocument(OOXMLPackage):
     def update_properties(self, metadata):
         assert not self._read_only, 'you may not update readonly documents!'
         self.properties = self.properties.update(metadata)
+
+    def has_any_property(self, property_names):
+        current_properties = set(self.properties.get_property_names())
+        return any(name in current_properties for name in property_names)

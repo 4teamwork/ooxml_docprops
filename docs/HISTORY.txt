@@ -5,11 +5,12 @@ Changelog
 1.0.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add method to check if any doc-property is present.
+  [deiferni]
 
 
 1.0.0 (2014-06-05)
 ------------------
 
 - Initial implementation.
-  [lgraf, deif]
+  [lgraf, deiferni]
