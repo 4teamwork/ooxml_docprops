@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.0.1 (unreleased)
+1.1.0 (2014-10-27)
 ------------------
 
 - Add method to check if any doc-property is present.
