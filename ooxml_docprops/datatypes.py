@@ -33,10 +33,10 @@ class DataTypeConverter(object):
             if isinstance(value, str):
                 value = value.decode('utf-8')
             return value
-        elif isinstance(value, int):
-            return str(value).encode('utf-8')
         elif isinstance(value, bool):
             return value and u'true' or u'false'
+        elif isinstance(value, int):
+            return str(value).encode('utf-8')
         elif isinstance(value, datetime):
             return value.isoformat()
         else:
@@ -63,12 +63,12 @@ class DataTypeConverter(object):
         """Given a Python data type, determine the correct value type node
         type.
         """
-        if isinstance(value, int):
-            return 'i4'
-        elif isinstance(value, basestring):
+        if isinstance(value, basestring):
             return 'lpwstr'
         elif isinstance(value, bool):
             return 'bool'
+        elif isinstance(value, int):
+            return 'i4'
         elif isinstance(value, datetime):
             return 'filetime'
         else:
@@ -82,12 +82,12 @@ class DataTypeValidator(object):
         the two types are compatible.
         """
         tag = QName(vt_node).localname
-        if tag in INT_VTYPES:
-            required_type = int
-        elif tag in STR_VTYPES:
+        if tag in STR_VTYPES:
             required_type = basestring
         elif tag == 'bool':
             required_type = bool
+        elif tag in INT_VTYPES:
+            required_type = int
         elif tag == 'filetime':
             required_type = datetime
         else:
