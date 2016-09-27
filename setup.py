@@ -34,8 +34,9 @@ setup(name='ooxml_docprops',
       zip_safe=False,
 
       install_requires=[
-        'setuptools',
+        'iso8601',
         'lxml',
+        'setuptools',
         ],
 
       tests_require=tests_require,
