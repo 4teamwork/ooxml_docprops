@@ -5,7 +5,8 @@ Changelog
 1.2.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Introduce a force flag to overwrite doc-properties of a wrong type.
+  [deiferni]
 
 
 1.2.0 (2016-10-04)
