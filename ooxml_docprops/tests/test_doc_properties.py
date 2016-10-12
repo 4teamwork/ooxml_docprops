@@ -1,3 +1,5 @@
+from datetime import datetime
+from ooxml_docprops.datatypes import ValidationError
 from ooxml_docprops.properties import OOXMLDocument
 from ooxml_docprops.tests.assets import TestAsset
 from unittest2 import TestCase
@@ -41,3 +43,22 @@ class TestDocProperties(TestCase):
 
                 self.assertEqual('Hanspeter',
                                  doc.properties.get_property_value('Test'))
+
+    def test_properties_with_different_type_can_be_updated_in_force_mode(self):
+        with TestAsset('with_custom_properties.docx') as asset:
+            with OOXMLDocument(asset.path, force=True) as doc:
+                self.assertEqual('Peter',
+                                 doc.properties.get_property_value('Test'))
+                now = datetime.now()
+                doc.update_properties({'Test': now})
+
+                self.assertEqual(now,
+                                 doc.properties.get_property_value('Test'))
+
+    def test_properties_with_different_type_raise_in_non_force_mode(self):
+        with TestAsset('with_custom_properties.docx') as asset:
+            with OOXMLDocument(asset.path) as doc:
+                self.assertEqual('Peter',
+                                 doc.properties.get_property_value('Test'))
+                with self.assertRaises(ValidationError):
+                    doc.update_properties({'Test': datetime.now()})

@@ -18,6 +18,7 @@ from config import NSMAP_CUSTOM_PROPERTIES
 from datatypes import DataTypeConverter
 from datatypes import DataTypeValidator
 from lxml import etree
+from ooxml_docprops.datatypes import ValidationError
 from package import OOXMLPackage
 import config
 import os
@@ -43,18 +44,27 @@ class Part(object):
 
 class CustomPropertiesPart(Part):
 
-    def __init__(self, docprops_path):
+    def __init__(self, docprops_path, force):
         super(CustomPropertiesPart, self).__init__(docprops_path)
 
         self.converter = DataTypeConverter()
         self.validator = DataTypeValidator()
+        self.force = force
 
     def set_property_value(self, name, value):
         property_node = self.get_property_node(name)
         value_type_node = property_node.getchildren()[0]
-        self.validator.validate(value_type_node, value)
-        value = self.converter.convert_value(value)
-        value_type_node.text = value
+
+        try:
+            self.validator.validate(value_type_node, value)
+            value = self.converter.convert_value(value)
+            value_type_node.text = value
+        except ValidationError:
+            if self.force:
+                property_node.remove(value_type_node)
+                self.add_value_node(property_node, value)
+            else:
+                raise
 
         self.write_xml_file()
 
@@ -95,14 +105,16 @@ class CustomPropertiesPart(Part):
         new_property.attrib['pid'] = new_pid
         new_property.attrib['name'] = name
 
+        self.add_value_node(new_property, value)
+        self.write_xml_file()
+
+    def add_value_node(self, parent_node, value):
         value_type = self.converter.determine_value_type(value)
-        vt = etree.SubElement(new_property, '{%s}%s' % (
+        vt = etree.SubElement(parent_node, '{%s}%s' % (
             NAMESPACES['VTYPES'], value_type))
         self.validator.validate(vt, value)
         value = self.converter.convert_value(value)
         vt.text = value
-
-        self.write_xml_file()
 
     def update(self, metadata):
         for (key, value) in metadata.items():
@@ -132,8 +144,9 @@ class CustomPropertiesPart(Part):
 
 class EmptyPropertiesPart(object):
 
-    def __init__(self, workdir):
+    def __init__(self, workdir, force):
         self.workdir = workdir
+        self.force = force
 
     def update(self, metadata):
         if not metadata:
@@ -142,7 +155,8 @@ class EmptyPropertiesPart(object):
         self.add_properties_to_content_types()
         self.add_properties_to_relationships()
         properties_path = self._create_custom_props_file()
-        return CustomPropertiesPart(properties_path).update(metadata)
+        return CustomPropertiesPart(
+            properties_path, self.force).update(metadata)
 
     def add_properties_to_content_types(self):
         OOXMLContentTypes(self.workdir).create_custom_props_content_types()
@@ -242,15 +256,21 @@ class OOXMLRelationships(Part):
 
 class OOXMLDocument(OOXMLPackage):
 
+    def __init__(self, zipped_path, read_only=False, force=False):
+        """A document can be initialised in force mode to overwrite properties
+        """
+        super(OOXMLDocument, self).__init__(zipped_path, read_only=read_only)
+        self._force = force
+
     def __enter__(self):
         super(OOXMLDocument, self).__enter__()
 
         self.relationships = OOXMLRelationships(self.workdir)
         docprops_path = self.relationships.get_custom_props_path()
         if docprops_path is None:
-            self.properties = EmptyPropertiesPart(self.workdir)
+            self.properties = EmptyPropertiesPart(self.workdir, self._force)
         else:
-            self.properties = CustomPropertiesPart(docprops_path)
+            self.properties = CustomPropertiesPart(docprops_path, self._force)
         return self
 
     def update_properties(self, metadata):
