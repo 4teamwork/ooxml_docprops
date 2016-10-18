@@ -2,7 +2,7 @@ Changelog
 =========
 
 
-1.2.1 (unreleased)
+1.3.0 (2016-10-18)
 ------------------
 
 - Introduce a force flag to overwrite doc-properties of a wrong type.
