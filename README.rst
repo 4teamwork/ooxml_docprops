@@ -25,6 +25,6 @@ updating / adding the metadata from the dictionary `metadata`.
 
 Example::
 
-    from ooxml_docprops.properties import update_properties
+    from ooxml_docprops import update_properties
 
     update_properties('./example.docx', {'MyProperty': 12345})
