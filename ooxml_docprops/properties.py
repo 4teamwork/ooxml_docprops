@@ -8,19 +8,19 @@ Relevant parts of standards:
 http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
-from config import CONTENT_TYPES_PATH
-from config import CUSTOM_PROPERTY_CONTENT_TYPE
-from config import CUSTOM_PROPERTY_DEFAULT_PATH
-from config import CUSTOM_PROPERTY_FMTID
-from config import NAMESPACES
-from config import NSMAP
-from config import NSMAP_CUSTOM_PROPERTIES
-from datatypes import DataTypeConverter
-from datatypes import DataTypeValidator
+from .config import CONTENT_TYPES_PATH
+from .config import CUSTOM_PROPERTY_CONTENT_TYPE
+from .config import CUSTOM_PROPERTY_DEFAULT_PATH
+from .config import CUSTOM_PROPERTY_FMTID
+from .config import DEBUG
+from .config import NAMESPACES
+from .config import NSMAP
+from .config import NSMAP_CUSTOM_PROPERTIES
+from .datatypes import DataTypeConverter
+from .datatypes import DataTypeValidator
+from .datatypes import ValidationError
+from .package import OOXMLPackage
 from lxml import etree
-from ooxml_docprops.datatypes import ValidationError
-from package import OOXMLPackage
-import config
 import os
 import re
 
@@ -127,10 +127,10 @@ class CustomPropertiesPart(Part):
         else:
             self.add_property(name, value)
 
-        if config.DEBUG:
+        if DEBUG:
             value = self.get_property_value(name)
-            print "Reading out property '%s' again:" % name
-            print "    %s = %s" % (name, value)
+            print("Reading out property '{}' again:".format(name))
+            print("    {} = {}".format(name, value))
 
     def get_property_node(self, name):
         xpath = '/c:Properties/c:property[@name="%s"]' % name

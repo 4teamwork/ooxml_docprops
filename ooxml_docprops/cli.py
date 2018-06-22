@@ -24,8 +24,8 @@ def update_props():
 
     config.DEBUG = args.debug
     if config.DEBUG:
-        print "Updating '%s' with metadata from '%s'..." % (
-            args.document, args.metadata_file)
+        print("Updating '{}' with metadata from '{}'...".format(
+            args.document, args.metadata_file))
 
     metadata = json.load(open(args.metadata_file))
     update_properties(args.document, metadata)
@@ -37,7 +37,7 @@ def read_props():
 
     config.DEBUG = args.debug
     if config.DEBUG:
-        print "Reading properties from '%s'..." % args.document
+        print("Reading properties from '{}'...".format(args.document))
 
     for key, value in read_properties(args.document):
-        print "%s = %s" % (key, value)
+        print("{} = {}".format(key, value))
