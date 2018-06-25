@@ -38,7 +38,7 @@ class Part(object):
     def write_xml_file(self):
         xml = etree.tostring(self.tree, pretty_print=True,
                              xml_declaration=True, encoding='utf-8')
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, 'wb') as f:
             f.write(xml)
 
 
