@@ -37,6 +37,7 @@ class TestAsset(object):
         with NamedTemporaryFile(delete=False) as tmpfile:
             tmpfile.write(asset.read())
         self.tmpfile = tmpfile
+        asset.close()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):

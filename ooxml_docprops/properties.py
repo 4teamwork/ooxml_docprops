@@ -33,7 +33,8 @@ class Part(object):
 
     def __init__(self, path):
         self.filepath = path
-        self.tree = etree.parse(open(self.filepath))
+        with open(self.filepath, 'rb') as file_:
+            self.tree = etree.parse(file_)
 
     def write_xml_file(self):
         xml = etree.tostring(self.tree, pretty_print=True,
@@ -170,7 +171,7 @@ class EmptyPropertiesPart(object):
                                          CUSTOM_PROPERTY_DEFAULT_PATH)
         assert not os.path.exists(custom_props_path)
 
-        with open(custom_props_path, 'w') as f:
+        with open(custom_props_path, 'wb') as f:
             root = etree.Element('Properties', nsmap=NSMAP_CUSTOM_PROPERTIES)
             xml = etree.tostring(etree.ElementTree(root), pretty_print=True,
                                  xml_declaration=True, encoding='utf-8')
