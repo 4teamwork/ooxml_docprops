@@ -3,6 +3,8 @@ ooxml_docprops
 
 This package allows to update custom DocProperties in OOXML based documents.
 
+⚠️ Please note that this package is no longer maintained and might go away without further notice.
+
 Usage
 -----
 
