@@ -5,10 +5,10 @@ Relevant parts of standards:
   http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
+from . import config
+from .zip_utils import zipdir
 from os.path import abspath
 from zipfile import ZipFile
-from zip_utils import zipdir
-import config
 import os
 import shutil
 import tempfile
@@ -38,7 +38,7 @@ class OOXMLPackage(object):
         """Unpack a zipped OOXML Package into a working directory.
         """
         if config.DEBUG:
-            print "Unpacking to %s" % self.workdir
+            print("Unpacking to {}".format(self.workdir))
         with ZipFile(self.zipped_path, 'r') as z:
             z.extractall(self.workdir)
         self._unpacked = True
@@ -55,10 +55,10 @@ class OOXMLPackage(object):
         temp_zip_location = tempfile.mkdtemp(prefix='docx_temp_zip')
         temp_zip_path = os.path.join(temp_zip_location, 'output.zip')
         if config.DEBUG:
-            print "Packing to %s..." % temp_zip_path
+            print("Packing to {}...".format(temp_zip_path))
         zipdir(self.workdir, temp_zip_path)
         if config.DEBUG:
-            print "Moving to %s" % self.zipped_path
+            print("Moving to %s".format(self.zipped_path))
         shutil.move(temp_zip_path, self.zipped_path)
         shutil.rmtree(temp_zip_location)
         if self.remove_workdir:

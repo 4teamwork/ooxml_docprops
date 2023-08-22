@@ -8,19 +8,19 @@ Relevant parts of standards:
 http://www.ecma-international.org/publications/standards/Ecma-376.htm
 """
 
-from config import CONTENT_TYPES_PATH
-from config import CUSTOM_PROPERTY_CONTENT_TYPE
-from config import CUSTOM_PROPERTY_DEFAULT_PATH
-from config import CUSTOM_PROPERTY_FMTID
-from config import NAMESPACES
-from config import NSMAP
-from config import NSMAP_CUSTOM_PROPERTIES
-from datatypes import DataTypeConverter
-from datatypes import DataTypeValidator
+from .config import CONTENT_TYPES_PATH
+from .config import CUSTOM_PROPERTY_CONTENT_TYPE
+from .config import CUSTOM_PROPERTY_DEFAULT_PATH
+from .config import CUSTOM_PROPERTY_FMTID
+from .config import DEBUG
+from .config import NAMESPACES
+from .config import NSMAP
+from .config import NSMAP_CUSTOM_PROPERTIES
+from .datatypes import DataTypeConverter
+from .datatypes import DataTypeValidator
+from .datatypes import ValidationError
+from .package import OOXMLPackage
 from lxml import etree
-from ooxml_docprops.datatypes import ValidationError
-from package import OOXMLPackage
-import config
 import os
 import re
 
@@ -33,12 +33,13 @@ class Part(object):
 
     def __init__(self, path):
         self.filepath = path
-        self.tree = etree.parse(open(self.filepath))
+        with open(self.filepath, 'rb') as file_:
+            self.tree = etree.parse(file_)
 
     def write_xml_file(self):
         xml = etree.tostring(self.tree, pretty_print=True,
                              xml_declaration=True, encoding='utf-8')
-        with open(self.filepath, 'w') as f:
+        with open(self.filepath, 'wb') as f:
             f.write(xml)
 
 
@@ -127,10 +128,10 @@ class CustomPropertiesPart(Part):
         else:
             self.add_property(name, value)
 
-        if config.DEBUG:
+        if DEBUG:
             value = self.get_property_value(name)
-            print "Reading out property '%s' again:" % name
-            print "    %s = %s" % (name, value)
+            print("Reading out property '{}' again:".format(name))
+            print("    {} = {}".format(name, value))
 
     def get_property_node(self, name):
         xpath = '/c:Properties/c:property[@name="%s"]' % name
@@ -170,7 +171,7 @@ class EmptyPropertiesPart(object):
                                          CUSTOM_PROPERTY_DEFAULT_PATH)
         assert not os.path.exists(custom_props_path)
 
-        with open(custom_props_path, 'w') as f:
+        with open(custom_props_path, 'wb') as f:
             root = etree.Element('Properties', nsmap=NSMAP_CUSTOM_PROPERTIES)
             xml = etree.tostring(etree.ElementTree(root), pretty_print=True,
                                  xml_declaration=True, encoding='utf-8')

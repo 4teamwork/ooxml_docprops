@@ -37,6 +37,7 @@ setup(name='ooxml_docprops',
         'iso8601',
         'lxml',
         'setuptools',
+        'future',
         ],
 
       tests_require=tests_require,

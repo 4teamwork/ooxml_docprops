@@ -11,6 +11,7 @@ from datetime import datetime
 from datetime import time
 from lxml.etree import QName
 import iso8601
+from past.builtins import basestring
 
 
 INT_VTYPES = ('i1', 'i2', 'i3', 'i4', 'i8', 'int')
@@ -31,7 +32,11 @@ class DataTypeConverter(object):
         if isinstance(value, basestring):
             # Always pass unicode to lxml API
             if isinstance(value, str):
-                value = value.decode('utf-8')
+                try:
+                    value = value.decode('utf-8')
+                except AttributeError:
+                    # Python 3, str is equivalent to unicode
+                    pass
             return value
         elif isinstance(value, bool):
             return value and u'true' or u'false'
